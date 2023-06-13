@@ -135,6 +135,17 @@ public:
         }
     }
 
+	virtual void CopyArray(const CJAVal& a) {
+	    key = a.key;
+	    type = a.type;
+	    bool_v = a.bool_v;
+	    int_v = a.int_v;
+	    dbl_v = a.dbl_v;
+	    dbl_precision = a.dbl_precision;
+	    str_v = a.str_v;
+	    CopyArr(a);
+    }    
+
     // - search -
 	virtual CJAVal* FindKey(string a_key) {
 	    for (int i=Size()-1; i>=0; --i)
@@ -356,12 +367,12 @@ CJAVal* CJAVal::operator[](int i) {
 	return GetPointer(children[i]);
 }
 //------------------------------------------------------------------	Remove
-bool CJAVal::Remove(string a_key) {
+bool CJAVal::Remove(const string v) {
     for (int i = 0; i < Size(); ++i) {
-        if (children[i].key == a_key || (children[i].str_v == a_key && children[i].key == "")) {
+        if (children[i].key == v || (children[i].str_v == v && children[i].key == "")) {
             // Shift all elements after the i-th element to the left
             for (int j = i; j < Size() - 1; ++j) {
-                children[j] = children[j + 1];
+                children[j].CopyArray(children[j + 1]);
             }
             // Resize the array to remove the last element
             ArrayResize(children, Size() - 1);
