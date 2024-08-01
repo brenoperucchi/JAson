@@ -1,13 +1,14 @@
-#property copyright "Copyright © 2006-2017, Alexey Sergeev, Artem Maltsev and contributors: https://github.com/vivazzi/JAson/blob/main/CONTRIBUTORS.md"
-#property version "1.13.0"
+#property copyright "Copyright © 2006-2017, Alexey Sergeev, Artem Maltsev and contributors"
+#property version "1.132"
 #property description "jsonON Serialization and Deserialization"
 #property strict
+// Update 03 by Breno Perucchi
 
 
 #ifdef DEBUG
-    #define DEBUG_PRINT_KEY() Print(key+" "+string(__LINE__))
+    #define DEBUG_PRINT_KEY Print(key+" "+string(__LINE__))
 #else
-    #define DEBUG_PRINT_KEY()
+    #define DEBUG_PRINT_KEY
 #endif
 
 
@@ -419,7 +420,7 @@ bool CJAVal::Deserialize(char& json[], int len, int &i) {
             // the beginning of the array. create objects and take them from json
             case '[': {
                 i0 = i+1;
-                if (type != jtUNDEF) { DEBUG_PRINT_KEY(); return false; }  // if value already has type, then this is an error
+                if (type != jtUNDEF) { DEBUG_PRINT_KEY; return false; }  // if value already has type, then this is an error
 
                 type = jtARRAY;  // set the value type
                 i++; CJAVal val(GetPointer(this), jtUNDEF);
@@ -429,7 +430,7 @@ bool CJAVal::Deserialize(char& json[], int len, int &i) {
                     if (val.type == jtINT || val.type == jtDBL || val.type == jtARRAY) i++;
                     val.Clear(); val.parent = GetPointer(this);
                     if (json[i] == ']') break;
-                    i++; if (i >= len) { DEBUG_PRINT_KEY(); return false; }
+                    i++; if (i >= len) { DEBUG_PRINT_KEY; return false; }
                 }
                 return json[i] == ']' || json[i] == 0;
 
@@ -444,12 +445,12 @@ bool CJAVal::Deserialize(char& json[], int len, int &i) {
             }
 
             case ':': {
-                if (l_key == "") { DEBUG_PRINT_KEY(); return false; }
+                if (l_key == "") { DEBUG_PRINT_KEY; return false; }
 
                 CJAVal val(GetPointer(this), jtUNDEF);
                 CJAVal *oc = Add(val);  // object type not yet defined
                 oc.key = l_key; l_key = "";  // set name of key
-                i++; if (!oc.Deserialize(json, len, i)) { DEBUG_PRINT_KEY(); return false; }
+                i++; if (!oc.Deserialize(json, len, i)) { DEBUG_PRINT_KEY; return false; }
                 break;
             }
 
@@ -457,10 +458,10 @@ bool CJAVal::Deserialize(char& json[], int len, int &i) {
             case ',': {
                 i0 = i+1;
                 if (!parent && type != jtOBJ) {
-                    DEBUG_PRINT_KEY(); return false;
+                    DEBUG_PRINT_KEY; return false;
                 }
                 else if (parent) {
-                    if (parent.type != jtARRAY && parent.type != jtOBJ) { DEBUG_PRINT_KEY(); return false; }
+                    if (parent.type != jtARRAY && parent.type != jtOBJ) { DEBUG_PRINT_KEY; return false; }
                     if (parent.type == jtARRAY && type == jtUNDEF) return true;
                 }
                 break;
@@ -470,9 +471,9 @@ bool CJAVal::Deserialize(char& json[], int len, int &i) {
             // beginning of the object. Create an object and fetch it from json
             case '{': {
                 i0 = i+1;
-                if (type != jtUNDEF) { DEBUG_PRINT_KEY(); return false; }  // type error
+                if (type != jtUNDEF) { DEBUG_PRINT_KEY; return false; }  // type error
                 type = jtOBJ;  // set the value type
-                i++; if (!Deserialize(json, len, i)) { DEBUG_PRINT_KEY(); return false; }  // pull it out
+                i++; if (!Deserialize(json, len, i)) { DEBUG_PRINT_KEY; return false; }  // pull it out
                 if (i >= len) return false;
                 return json[i] == '}' || json[i] == 0;
                 break;
@@ -484,26 +485,26 @@ bool CJAVal::Deserialize(char& json[], int len, int &i) {
             // beginning of 'true' or 'false'
             case 't': case 'T':
             case 'f': case 'F': {
-                if (type != jtUNDEF) { DEBUG_PRINT_KEY(); return false; }  // type error
+                if (type != jtUNDEF) { DEBUG_PRINT_KEY; return false; }  // type error
                 type = jtBOOL;  // set the value type
                 if (i+3 < len) { if (StringCompare(GetStr(json, i, 4), "true", false) == 0) { bool_v=true; i += 3; return true; } }
                 if (i+4 < len) { if (StringCompare(GetStr(json, i, 5), "false", false) == 0) { bool_v=false; i += 4; return true; } }
-                DEBUG_PRINT_KEY(); return false;  // wrong type or end of line
+                DEBUG_PRINT_KEY; return false;  // wrong type or end of line
                 break;
             }
 
             // beginning of null
             case 'n': case 'N': {
-                if (type != jtUNDEF) { DEBUG_PRINT_KEY(); return false; }  // type error
+                if (type != jtUNDEF) { DEBUG_PRINT_KEY; return false; }  // type error
                 type = jtNULL;  // set the value type
                 if (i+3 < len) if (StringCompare(GetStr(json, i, 4), "null", false) == 0) { i += 3; return true; }
-                DEBUG_PRINT_KEY(); return false;  // not NULL or end of line
+                DEBUG_PRINT_KEY; return false;  // not NULL or end of line
                 break;
             }
 
             // beginning of number
             case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '-': case '+': case '.': {
-                if (type != jtUNDEF) { DEBUG_PRINT_KEY(); return false; }  // type error
+                if (type != jtUNDEF) { DEBUG_PRINT_KEY; return false; }  // type error
 
                 bool dbl = false;  // set the value type
                 int is = i;
@@ -526,16 +527,16 @@ bool CJAVal::Deserialize(char& json[], int len, int &i) {
                 // if the type has not yet been defined and the key has not been set
                 if (type == jtOBJ) {
                     i++; int is = i;
-                    if (!ExtrStr(json, len, i)) { DEBUG_PRINT_KEY(); return false; }  // this is the key, go to the end of the line
+                    if (!ExtrStr(json, len, i)) { DEBUG_PRINT_KEY; return false; }  // this is the key, go to the end of the line
 
                     l_key = GetStr(json, is, i-is);
                 }
                 else {
-                    if (type != jtUNDEF) { DEBUG_PRINT_KEY(); return false; }  // type error
+                    if (type != jtUNDEF) { DEBUG_PRINT_KEY; return false; }  // type error
 
                     type = jtSTR;  // set the value type
                     i++; int is = i;
-                    if (!ExtrStr(json, len, i)) { DEBUG_PRINT_KEY(); return false; }
+                    if (!ExtrStr(json, len, i)) { DEBUG_PRINT_KEY; return false; }
                     FromStr(jtSTR, GetStr(json, is, i-is));
                     return true;
                 }
